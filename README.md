@@ -1,5 +1,5 @@
 # simulacion_satelital
-En este porgrama realizamos simulaciones de orbitas de un satelite en distintas alturas sobre la superficie de la tierra, empleando el metodo de integración de Leapfrog. Las dependencias del código son principalmente las librerías de numpy y matplotlib.pyplot.
+En este programa realizamos simulaciones de orbitas de un satelite en distintas alturas sobre la superficie de la tierra, empleando el metodo de integración de Leapfrog. Las dependencias del código son principalmente las librerías de numpy y matplotlib.pyplot.
 
 Primero se creó una clase llamada cuerpo donde tendrá las principales funciones y atributos  como:
 se definen atributos para la masa, pocisiones, constantes y distancias. Valores para cada poscisión sea X e Y. 
