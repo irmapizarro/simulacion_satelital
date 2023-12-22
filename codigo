@@ -1,0 +1,131 @@
+#Aqui importamos las librerias necesarias para que nuestro codigo funione
+import matplotlib.pyplot as plt
+import numpy as np
+
+#Pimero tenemos que tener nuestras constantes para iniciar el problema
+masa_tierra= 5.972e24 #masa de la tierra en kilogramos
+G= 6.67e-11           #cte de gravitacion universal
+rt= 6370e3                # radio de la tierra en m
+
+#ESteblecemos las alturas de cada tipo de orbita
+LEO= 1250e3 +rt
+MEO= 10000e3 +rt
+GEO= 35786e3 +rt
+HEO= 70000e3 +rt
+
+class cuerpo:
+  def __init__(self,name,pos,mass):
+     self.name = name               #nombre de cada objeto
+     self.m    = mass               #masa de cada objeto
+     self.x    = pos[0]             #un valor para la posicion en x
+     self.y    = pos[1]             # un valor para la posicion en y
+     self.r    = np.sqrt(pos[0]**2+pos[1]**2)      # se calcula el r en coo cartesianas
+     if name != 'tierra':           #se calculan las velocidades del cuerpo solo si este no es la tierra
+      vK        = np.sqrt(G*masa_tierra/self.r)       # se define la velocidad kepleriana que tendra el cuerpo
+      self.vx   = -vK*self.y/self.r     #velocidad en x
+      self.vy   = vK*self.x/self.r      #velocidad en y
+     else:
+        self.vx = 0.0      # en el caso de que el cuerpo sea la tierra se deja fijo
+        self.vy = 0.0
+        self.ax = 0.0
+        self.ay = 0.0
+        self.E  = 0.0
+
+
+def cal_a(obs): # aca calculamos la aceleracion de un cuerpo debido a todos los otros
+    for ob1 in obs:
+        ob1.ax,ob1.ay = 0.0,0.0
+        for ob2 in obs:
+            if ob1.name != ob2.name:
+                dist  = np.sqrt((ob1.x-ob2.x)**2+(ob1.y-ob2.y)**2)
+                ob1.ax += -G*ob2.m/dist**3*(ob1.x-ob2.x)
+                ob1.ay += -G*ob2.m/dist**3*(ob1.y-ob2.y)
+        if ob1.name == 'tierra':
+            ob1.ax,ob1.ay = 0.0,0.0
+
+def update_pos(obs,dt): # aca hse actualiza la posicion
+    for ob in obs:
+        ob.x += ob.vx*dt
+        ob.y += ob.vy*dt
+        ob.r = np.sqrt(ob.x**2+ob.y**2)
+
+def update_vel(obs,dt): # aca se actualiza la velocidad con cada paso de tiempo
+    for ob in obs:
+        ob.vx += ob.ax*dt
+        ob.vy += ob.ay*dt
+
+
+def leapfrog(obs,dt): # Vamos a utilizar el metodo de leapfrog para la simulacion
+    cal_a(obs)        # en principio tenemos leapfrog sin arrastre, luego lo anadiremos a otro leapfrog
+    update_vel(obs,dt/2)
+    update_pos(obs,dt)
+    cal_a(obs)
+    update_vel(obs,dt/2)
+    cal_energy(obs)
+
+def cal_energy(obs):    # en esta seccion se calcula la energia para tener una nocion de como esta
+    for ob1 in obs:     # el error en nuestra simulacion
+        Ekin = ob1.m*(ob1.vx**2+ob1.vy**2)/2
+        Epot = 0.0
+        for ob2 in obs:
+            if ob1.name != ob2.name:
+                dist  = np.sqrt((ob1.x-ob2.x)**2+(ob1.y-ob2.y)**2)
+                Epot += G*ob2.m/dist
+        ob1.E  = Ekin+Epot
+
+obs = [] #vamos a poner los objetos acá
+obs.append(cuerpo('tierra',[0.0,0.0],masa_tierra))
+obs.append(cuerpo('sat_1',[LEO,0.0],500))
+obs.append(cuerpo('sat_2',[-MEO,0.0],500))
+obs.append(cuerpo('sat_3',[GEO,0.0],500))
+obs.append(cuerpo('sat_4',[-HEO,0.0],500))
+obs = np.array(obs)
+names =[]
+for ob in obs:
+    names.append(ob.name)
+    if ob.name == 'tierra':
+        plt.plot(ob.x,ob.y,marker='o',ms=15)
+    else:
+        plt.plot(ob.x,ob.y,marker='o',label=ob.name)
+        plt.legend()
+plt.show()
+
+cal_energy(obs)   # en este paso se calcula la energia y se almacenan los
+print(obs)        #valores de las posiciones para cada objeto
+X = []
+Y = []
+e = []
+for ob in obs:
+    X.append([ob.x])
+    Y.append([ob.y])
+    e.append([ob.E])
+N    = 1000 #timesteps per orbit
+norb = 2
+T    = 86400 #tiempo total de la simulación
+dt   = T/N/norb
+t    = 0.0
+while t<T:
+    for i in range(len(obs)):
+        X[i].append(obs[i].x)
+        Y[i].append(obs[i].y)
+        e[i].append(obs[i].E)
+    leapfrog(obs,dt)
+    t += dt
+
+for i in range(len(obs)):
+    plt.plot(X[i],Y[i],label=names[i])
+    plt.style.use('dark_background')
+plt.title('satelites en orbita sin arrastre')
+plt.xlabel('distancias en m ')
+plt.ylabel('distancias en m ')
+plt.plot(0,0,'.',ms=45,color='b')
+plt.gca().set_aspect(1)
+plt.style.use('dark_background')
+plt.legend()
+plt.show()
+plt.title('Energia Mecanica del sistema')
+e = np.array(e)
+plt.plot(e.sum(axis=0))
+plt.xlabel('pasos de tiempo')
+plt.ylabel('fluctuacion de energia')
+plt.show()
