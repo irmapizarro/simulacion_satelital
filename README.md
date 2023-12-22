@@ -6,4 +6,4 @@ se definen atributos para la masa, pocisiones, constantes y distancias. Valores 
 `cal_a` donde calcula la aceleracion de un cuerpo debido a todos los otros, 
 `def update_pos` que actualiza la poscisión,
 `update_vel` se actualiza la velocidad con cada paso de tiempo 
-y `cal_energy` donde se busca calcular la energía para tener una nocion de como esta el error de nuestra simulación
+y `cal_energy` donde se busca calcular la energía para tener una nocion de como esta el error de nuestra simulación.
